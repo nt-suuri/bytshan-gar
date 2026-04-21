@@ -1,220 +1,187 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import themes, { Theme } from "@/data/themes";
-import useFullscreen from "@/hooks/useFullscreen";
+import { THEMES } from "@/lib/data";
 
-type Stats = { totalKeys: number; startTime: number; lastKey: string; streak: number };
-
-type Props = {
-  stats: Stats;
-  audio: { setVolume: (v: number) => void; setMuted: (m: boolean) => void; isMuted: boolean };
-  theme: Theme;
-  setTheme: (t: Theme) => void;
-  reduceMotion: boolean;
-  setReduceMotion: (v: boolean) => void;
+export type Settings = {
+  theme: string;
+  style: string;
+  chaosSpeed: number;
+  rareRate: number;
+  muted: boolean;
+  volume: number;
+  shake: boolean;
+  attract: boolean;
 };
 
-function formatDuration(ms: number) {
-  const totalSec = Math.floor(ms / 1000);
-  const min = Math.floor(totalSec / 60);
-  const sec = totalSec % 60;
-  return `${min}мин ${sec}сек`;
+export type Report = {
+  total: number;
+  uniqueLetters: number;
+  animals: number;
+  rares: number;
+  chaos: number;
+};
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  settings: Settings;
+  setSettings: (s: Settings) => void;
+  report: Report;
+  onReset: () => void;
+};
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <div style={{ fontSize: 12, letterSpacing: 1.8, color: "#999", fontWeight: 700, marginBottom: 10 }}>
+        {title.toUpperCase()}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
+    </div>
+  );
 }
 
-function chaosLevel(keysPerMin: number) {
-  if (keysPerMin < 30) return { icon: "🟢", label: "Тайван" };
-  if (keysPerMin <= 60) return { icon: "🟡", label: "Идэвхтэй" };
-  return { icon: "🔴", label: "Галзуу" };
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#F8F9FB", borderRadius: 12, cursor: "pointer" }}>
+      <span style={{ fontSize: 15, fontWeight: 500, color: "#333" }}>{label}</span>
+      <span style={{
+        width: 48, height: 28, borderRadius: 999,
+        background: checked ? "#2D8C3C" : "#D0D2D8", position: "relative",
+        transition: "background 150ms ease",
+      }}>
+        <span style={{
+          position: "absolute", top: 3, left: checked ? 23 : 3,
+          width: 22, height: 22, borderRadius: "50%", background: "#fff",
+          transition: "left 150ms ease", boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+        }} />
+      </span>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ display: "none" }} />
+    </label>
+  );
 }
 
-export default function ParentPanel({ stats, audio, theme, setTheme, reduceMotion, setReduceMotion }: Props) {
-  const [open, setOpen] = useState(false);
-  const [volume, setVolumeLocal] = useState(80);
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const keyBuffer = useRef<string[]>([]);
-  const { isFullscreen, toggleFullscreen } = useFullscreen();
+function Slider({ label, min, max, step, value, onChange }: { label: string; min: number; max: number; step: number; value: number; onChange: (v: number) => void }) {
+  return (
+    <div style={{ padding: "10px 14px", background: "#F8F9FB", borderRadius: 12 }}>
+      <div style={{ fontSize: 14, color: "#333", fontWeight: 500, marginBottom: 6 }}>{label}</div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        style={{ width: "100%", accentColor: "#2D8C3C" }} />
+    </div>
+  );
+}
 
-  const onCornerPointerDown = () => {
-    holdTimer.current = setTimeout(() => setOpen(true), 2000);
-  };
-  const onCornerPointerUp = () => {
-    if (holdTimer.current) clearTimeout(holdTimer.current);
-  };
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div style={{ background: "#F8F9FB", padding: "14px 16px", borderRadius: 12 }}>
+      <div style={{ fontSize: 12, color: "#999", fontWeight: 600, letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: "#1a1a1a", marginTop: 2 }}>{value}</div>
+    </div>
+  );
+}
 
-  // Sequential "parent" key detection — capture phase so it runs before the game blocks keys
-  useEffect(() => {
-    const TARGET = "parent";
-    const onKey = (e: KeyboardEvent) => {
-      if (open) return;
-      keyBuffer.current.push(e.key.toLowerCase());
-      if (keyBuffer.current.length > TARGET.length) keyBuffer.current.shift();
-      if (keyBuffer.current.join("") === TARGET) {
-        setOpen(true);
-        keyBuffer.current = [];
-      }
-    };
-    window.addEventListener("keydown", onKey, { capture: true });
-    return () => window.removeEventListener("keydown", onKey, { capture: true });
-  }, [open]);
+export default function ParentPanel({ open, onClose, settings, setSettings, report, onReset }: Props) {
+  if (!open) return null;
 
-  const durationMs = Date.now() - stats.startTime;
-  const keysPerMin = durationMs > 0 ? stats.totalKeys / (durationMs / 60000) : 0;
-  const chaos = chaosLevel(keysPerMin);
-
-  const handleVolume = (v: number) => {
-    setVolumeLocal(v);
-    audio.setVolume(v / 100);
-  };
-
-  if (!open) {
-    return (
-      <div
-        className="absolute top-0 left-0 w-10 h-10 z-50"
-        style={{ pointerEvents: "all" }}
-        onPointerDown={onCornerPointerDown}
-        onPointerUp={onCornerPointerUp}
-        onPointerLeave={onCornerPointerUp}
-      />
-    );
-  }
+  const s = settings;
 
   return (
-    <>
-      <div
-        className="absolute inset-0 z-40"
-        style={{ pointerEvents: "all" }}
-        onClick={() => setOpen(false)}
-      />
-      <div
-        className="absolute top-0 left-0 h-full z-50 flex flex-col gap-4 overflow-y-auto"
-        style={{
-          width: "min(340px, 90vw)",
-          background: "rgba(10,10,30,0.92)",
-          color: "#fff",
-          padding: "1.5rem 1.25rem",
-          pointerEvents: "all",
-          backdropFilter: "blur(8px)",
-        }}
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 200,
+      background: "rgba(10,15,35,0.55)", backdropFilter: "blur(16px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: "'Bricolage Grotesque', sans-serif",
+    }}
+      onClick={onClose}
+    >
+      <div style={{
+        background: "#fff", borderRadius: 28, width: "min(560px, 92vw)",
+        maxHeight: "90vh", overflow: "auto",
+        padding: "32px 34px", boxShadow: "0 40px 120px rgba(0,0,0,0.4)",
+      }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
-          <span style={{ fontWeight: 700, fontSize: "1.1rem" }}>Эцэг эхийн самбар</span>
-          <button
-            onClick={() => setOpen(false)}
-            style={{ background: "none", border: "none", color: "#fff", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}
-          >
-            ✕
-          </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: 12, letterSpacing: 2, color: "#999", fontWeight: 700 }}>PARENT PANEL</div>
+            <div style={{ fontSize: 30, fontWeight: 800, color: "#1a1a1a", marginTop: 4 }}>Бяцхан Гар</div>
+          </div>
+          <button onClick={onClose} style={{
+            border: "none", background: "#F2F3F5", width: 44, height: 44,
+            borderRadius: "50%", fontSize: 22, cursor: "pointer", fontWeight: 700,
+          }}>✕</button>
         </div>
 
-        <hr style={{ borderColor: "rgba(255,255,255,0.15)" }} />
-
-        <div className="flex flex-col gap-2">
-          <label className="flex items-center justify-between" style={{ fontSize: "0.9rem" }}>
-            <span>Дуу</span>
-            <input
-              type="checkbox"
-              checked={!audio.isMuted}
-              onChange={(e) => audio.setMuted(!e.target.checked)}
-              style={{ width: 18, height: 18, cursor: "pointer" }}
-            />
-          </label>
-          <label className="flex items-center gap-3" style={{ fontSize: "0.9rem" }}>
-            <span style={{ whiteSpace: "nowrap" }}>Дуу хэмжээ</span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={volume}
-              onChange={(e) => handleVolume(Number(e.target.value))}
-              style={{ flex: 1 }}
-            />
-            <span style={{ minWidth: 28, textAlign: "right" }}>{volume}</span>
-          </label>
-        </div>
-
-        <hr style={{ borderColor: "rgba(255,255,255,0.15)" }} />
-
-        <label className="flex items-center justify-between" style={{ fontSize: "0.9rem" }}>
-          <span>Хөдөлгөөн багасгах</span>
-          <input
-            type="checkbox"
-            checked={reduceMotion}
-            onChange={(e) => setReduceMotion(e.target.checked)}
-            style={{ width: 18, height: 18, cursor: "pointer" }}
-          />
-        </label>
-
-        <hr style={{ borderColor: "rgba(255,255,255,0.15)" }} />
-
-        <div className="flex flex-col gap-2">
-          <span style={{ fontSize: "0.9rem" }}>Загвар</span>
-          <div className="flex gap-2 flex-wrap">
-            {themes.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTheme(t)}
+        <Section title="Theme · Сэдэв">
+          <div style={{ display: "flex", gap: 10 }}>
+            {Object.entries(THEMES).map(([k, t]) => (
+              <button key={k} onClick={() => setSettings({ ...s, theme: k })}
                 style={{
-                  flex: 1,
-                  minWidth: 80,
-                  padding: "0.5rem 0.25rem",
-                  borderRadius: 8,
-                  border: t.id === theme.id ? "2px solid #F2A900" : "2px solid rgba(255,255,255,0.2)",
-                  background: t.background,
-                  color: "#fff",
-                  fontSize: "0.8rem",
-                  cursor: "pointer",
-                  fontWeight: t.id === theme.id ? 700 : 400,
-                  textShadow: "0 1px 3px rgba(0,0,0,0.8)",
-                }}
-              >
-                <div>{t.name}</div>
-                <div style={{ opacity: 0.75, fontSize: "0.7rem" }}>{t.description}</div>
+                  flex: 1, border: s.theme === k ? "3px solid #1a1a1a" : "3px solid transparent",
+                  background: `linear-gradient(135deg, ${t.bg1}, ${t.bg2})`,
+                  borderRadius: 14, padding: "18px 10px", cursor: "pointer",
+                  color: "#fff", fontWeight: 700, fontSize: 16,
+                }}>
+                <div style={{ fontSize: 22 }}>{t.name}</div>
+                <div style={{ opacity: 0.75, fontSize: 13, marginTop: 2 }}>{t.en}</div>
               </button>
             ))}
           </div>
-        </div>
+        </Section>
 
-        <hr style={{ borderColor: "rgba(255,255,255,0.15)" }} />
+        <Section title="Sound · Дуу">
+          <Toggle label="Sound on" checked={!s.muted} onChange={(v) => setSettings({ ...s, muted: !v })} />
+          <Slider label={`Volume · ${Math.round(s.volume * 100)}%`} min={0} max={1} step={0.05}
+            value={s.volume} onChange={(v) => setSettings({ ...s, volume: v })} />
+        </Section>
 
-        <button
-          onClick={toggleFullscreen}
-          style={{
-            padding: "0.5rem",
-            borderRadius: 8,
-            border: "1px solid rgba(255,255,255,0.3)",
-            background: "rgba(255,255,255,0.1)",
-            color: "#fff",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-          }}
-        >
-          {isFullscreen ? "⛶ Жижигрүүлэх" : "⛶ Дэлгэц дүүргэх"}
-        </button>
+        <Section title="Motion · Хөдөлгөөн">
+          <Toggle label="Screen shake" checked={s.shake} onChange={(v) => setSettings({ ...s, shake: v })} />
+          <Toggle label="Attract mode (idle animations)" checked={s.attract} onChange={(v) => setSettings({ ...s, attract: v })} />
+          <Slider label={`Chaos speed · ${s.chaosSpeed.toFixed(1)}×`} min={0.5} max={2} step={0.1}
+            value={s.chaosSpeed} onChange={(v) => setSettings({ ...s, chaosSpeed: v })} />
+          <Slider label={`Rare event rate · ${Math.round(s.rareRate * 100)}%`} min={0} max={0.15} step={0.01}
+            value={s.rareRate} onChange={(v) => setSettings({ ...s, rareRate: v })} />
+        </Section>
 
-        <hr style={{ borderColor: "rgba(255,255,255,0.15)" }} />
+        <Section title="Smash Report · Тайлан">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Stat label="Total smashes" value={report.total} />
+            <Stat label="Unique letters" value={report.uniqueLetters} />
+            <Stat label="Animals seen" value={report.animals} />
+            <Stat label="Magic moments" value={report.rares} />
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontSize: 13, color: "#666", marginBottom: 6 }}>Chaos level</div>
+            <div style={{ height: 12, background: "#F0F1F4", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{
+                width: `${Math.min(100, report.chaos * 100)}%`, height: "100%",
+                background: "linear-gradient(90deg, #2D8C3C, #F2A900, #D32F2F)",
+                transition: "width 200ms ease",
+              }} />
+            </div>
+          </div>
+          <button onClick={onReset} style={{
+            marginTop: 14, border: "none", background: "#F0F1F4", padding: "10px 18px",
+            borderRadius: 999, fontWeight: 600, fontSize: 14, cursor: "pointer", color: "#333",
+          }}>Reset report</button>
+        </Section>
 
-        <div className="flex flex-col gap-1" style={{ fontSize: "0.85rem" }}>
-          <span style={{ fontWeight: 600, marginBottom: 4 }}>Тайлан</span>
-          <div className="flex justify-between">
-            <span style={{ opacity: 0.7 }}>Нийт товч</span>
-            <span>{stats.totalKeys}</span>
-          </div>
-          <div className="flex justify-between">
-            <span style={{ opacity: 0.7 }}>Хугацаа</span>
-            <span>{formatDuration(durationMs)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span style={{ opacity: 0.7 }}>Сүүлчийн товч</span>
-            <span>{stats.lastKey || "—"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span style={{ opacity: 0.7 }}>Хурд</span>
-            <span>{chaos.icon} {chaos.label}</span>
-          </div>
+        <Section title="Display">
+          <button onClick={() => {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else document.documentElement.requestFullscreen().catch(() => {});
+          }} style={{
+            width: "100%", border: "none", background: "#1a1a1a", color: "#fff",
+            padding: "14px", borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: "pointer",
+          }}>Toggle fullscreen</button>
+        </Section>
+
+        <div style={{ fontSize: 12, color: "#aaa", textAlign: "center", marginTop: 18 }}>
+          Hold top-left corner 2s to return
         </div>
       </div>
-    </>
+    </div>
   );
 }

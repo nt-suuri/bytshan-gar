@@ -1,7 +1,7 @@
 {
-  "name": "Бяцхан Гар - Mongolian Toddler Keyboard",
-  "short_name": "Бяцхан Гар",
-  "description": "Бяцхан хүүхдэд зориулсан Монгол гарын тоглоом",
+  "name": "Бяцхан Гар 🎹 Монгол хүүхдийн товчлуур тоглоом",
+  "short_name": "Бяцхан Гар 🎹",
+  "description": "Бяцхан хүүхдэд зориулсан Монгол гарын интерактив тоглоом 🐴🦅🎵",
   "start_url": "/",
   "display": "fullscreen",
   "orientation": "any",
