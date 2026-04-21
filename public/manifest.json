@@ -1,10 +1,13 @@
 {
-  "name": "Бяцхан Гар 🎹 Монгол хүүхдийн товчлуур тоглоом",
-  "short_name": "Бяцхан Гар 🎹",
-  "description": "Бяцхан хүүхдэд зориулсан Монгол гарын интерактив тоглоом 🐴🦅🎵",
+  "name": "Бяцхан Гар 🎹 Хүүхдийн интерактив тоглоом",
+  "short_name": "Бяцхан Гар",
+  "description": "Үнэгүй интерактив эможи тоглоом 🐴🦅🌈 Амьтад, дуу хөгжим, өнгө",
   "start_url": "/",
   "display": "fullscreen",
   "orientation": "any",
+  "lang": "mn",
+  "dir": "ltr",
+  "categories": ["education", "entertainment", "games"],
   "background_color": "#0066B3",
   "theme_color": "#0066B3",
   "icons": [

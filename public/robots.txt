@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bytshan-gar.vercel.app/sitemap.xml
