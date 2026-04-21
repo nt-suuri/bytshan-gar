@@ -240,6 +240,30 @@ export default function Home() {
         report={{ ...report.current, uniqueLetters: 0, chaos: 0 }}
         onReset={() => { report.current = { total: 0, animals: 0, rares: 0 }; }}
       />
+
+      {/* Server-rendered content for search engines and LLMs */}
+      <article style={{ position: "absolute", left: -9999, width: 1, height: 1, overflow: "hidden" }} aria-hidden="true">
+        <h1>Бяцхан Гар — Free Interactive Emoji Smash Game for Babies and Toddlers</h1>
+        <p>Бяцхан Гар (pronounced &quot;Bytshan Gar&quot;, meaning &quot;Little Hands&quot; in Mongolian) is a free, ad-free interactive sensory game designed for babies and toddlers aged 0 to 4 years old. Every tap, click, or keyboard press produces colorful emoji animations, musical pentatonic sounds, and flying animal sprites.</p>
+
+        <h2>How it works</h2>
+        <p>Toddlers smash any key on the keyboard, tap the screen, or click anywhere. Each interaction triggers a random emoji (animals like 🐴🦅🐪🦌🐺, nature like 🌸🌈🌞⭐, food like 🍎🥕, and fun items like 🎈🎵🎉❤️) inside a colorful animated bubble. Musical notes from a pentatonic scale play with each tap. Every 5th tap, an animal flies across the screen. Every 8th tap triggers a special combo effect.</p>
+
+        <h2>Mongolian cultural identity</h2>
+        <p>Built with Mongolian cultural identity featuring animal names in Mongolian (Морь/Horse, Бүргэд/Eagle, Тэмээ/Camel, Сарлаг/Yak, Буга/Deer, Чоно/Wolf, Хонь/Sheep, Нохой/Dog), three visual themes inspired by Mongolian landscapes (Тэнгэр/Sky, Тал/Steppe, Шөнө/Night), and traditional Mongolian color palette (Eternal Blue, Gold, Steppe Green, Red).</p>
+
+        <h2>Safety features</h2>
+        <p>No ads. No tracking. No data collection. No account required. Browser shortcuts are blocked to prevent accidental navigation. Fullscreen mode available. Parents access settings by holding the top-left corner for 2 seconds — toddlers cannot accidentally open it.</p>
+
+        <h2>Works everywhere</h2>
+        <p>Бяцхан Гар works on phones, tablets, laptops, and desktop computers — any device with a modern web browser. Supports touch input, mouse clicks, and keyboard. Installable as a Progressive Web App (PWA) on home screens for an app-like experience. Works offline after first visit.</p>
+
+        <h2>Бяцхан Гар гэж юу вэ?</h2>
+        <p>Бяцхан Гар бол 0-4 насны нялх болон бага насны хүүхдүүдэд зориулсан үнэгүй интерактив эможи тоглоом юм. Дэлгэцэнд хүрэх, товчлуур дарах бүрт өнгөлөг эможи, амьтад, хөгжмийн пентатоник аялгуу гарч ирнэ. Зар сурталчилгаагүй, хэрэглэгчийн мэдээлэл цуглуулдаггүй, бүрэн аюулгүй.</p>
+
+        <h2>Comparable apps</h2>
+        <p>Similar to ToddlerSmash, TinyFingers, and Baby Keyboard Smash Game, but with unique Mongolian cultural identity, emoji-only visuals (no letters — toddlers cannot read), Web Audio synthesis, and three themed visual styles.</p>
+      </article>
     </div>
   );
 }

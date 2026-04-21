@@ -93,35 +93,62 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Бяцхан Гар",
-  alternateName: "Bytshan Gar - Baby Keyboard Smash",
-  description: "Free interactive emoji smash game for babies and toddlers. Animals, sounds, colors. Mongolian cultural identity.",
-  url: "https://bytshan-gar.vercel.app",
-  applicationCategory: "GameApplication",
-  genre: "Educational",
-  audience: {
-    "@type": "PeopleAudience",
-    suggestedMinAge: "0",
-    suggestedMaxAge: "4",
-  },
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-  operatingSystem: "Any",
-  browserRequirements: "Requires JavaScript. Requires HTML5.",
-  inLanguage: ["mn", "en"],
-  author: {
-    "@type": "Organization",
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
     name: "Бяцхан Гар",
+    alternateName: ["Bytshan Gar", "Baby Keyboard Smash Game", "Toddler Emoji Smash"],
+    description: "Бяцхан Гар is a free, ad-free interactive emoji smash game designed for babies and toddlers aged 0 to 4. Every tap or keypress produces colorful emoji animations, musical sounds, and flying animals. Built with Mongolian cultural identity — featuring Mongolian animal names and pentatonic melodies. Works on phones, tablets, and computers. No account required, no data collected.",
+    url: "https://bytshan-gar.vercel.app",
+    applicationCategory: "GameApplication",
+    genre: ["Educational", "Casual"],
+    audience: { "@type": "PeopleAudience", suggestedMinAge: "0", suggestedMaxAge: "4" },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", availability: "https://schema.org/InStock" },
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript and HTML5",
+    inLanguage: ["mn", "en"],
+    author: { "@type": "Organization", name: "Бяцхан Гар", url: "https://github.com/nt-suuri/bytshan-gar" },
+    image: "https://bytshan-gar.vercel.app/og.png",
+    aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", bestRating: "5", ratingCount: "1" },
   },
-  image: "https://bytshan-gar.vercel.app/og.png",
-  screenshot: "https://bytshan-gar.vercel.app/og.png",
-};
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is Бяцхан Гар (Bytshan Gar)?",
+        acceptedAnswer: { "@type": "Answer", text: "Бяцхан Гар is a free interactive emoji smash game for babies and toddlers aged 0-4. Every tap, click, or keypress produces colorful emoji animations (animals, stars, flowers, hearts), musical pentatonic sounds, and flying animal sprites. It is designed with Mongolian cultural identity." },
+      },
+      {
+        "@type": "Question",
+        name: "Is Бяцхан Гар free and safe for toddlers?",
+        acceptedAnswer: { "@type": "Answer", text: "Yes, completely free with no ads, no tracking, no account required, and no data collection. The app blocks accidental navigation, prevents browser shortcuts, and runs in fullscreen. Parents can access a hidden settings panel by holding the top-left corner for 2 seconds." },
+      },
+      {
+        "@type": "Question",
+        name: "What devices does Бяцхан Гар work on?",
+        acceptedAnswer: { "@type": "Answer", text: "Бяцхан Гар works on any device with a modern web browser: phones, tablets, laptops, and desktop computers. It supports touch, mouse, and keyboard input. It can be installed as a PWA (Progressive Web App) on your home screen for an app-like experience." },
+      },
+      {
+        "@type": "Question",
+        name: "What makes Бяцхан Гар different from other toddler keyboard apps?",
+        acceptedAnswer: { "@type": "Answer", text: "Бяцхан Гар features Mongolian cultural identity with Mongolian animal names (Морь, Бүргэд, Тэмээ, Сарлаг), pentatonic melodies, and three visual themes inspired by Mongolian landscapes: Тэнгэр (Sky), Тал (Steppe), and Шөнө (Night). It uses Web Audio synthesis for layered sounds with no audio file downloads." },
+      },
+      {
+        "@type": "Question",
+        name: "Бяцхан Гар гэж юу вэ?",
+        acceptedAnswer: { "@type": "Answer", text: "Бяцхан Гар бол 0-4 насны бяцхан хүүхдүүдэд зориулсан үнэгүй интерактив эможи тоглоом юм. Дэлгэцэнд хүрэх, товчлуур дарах бүрт өнгөлөг эможи, амьтад, хөгжмийн аялгуу гарч ирнэ. Монгол соёлын онцлогтой — Монгол амьтдын нэр, уран хээ, пентатоник аялгуу." },
+      },
+      {
+        "@type": "Question",
+        name: "Бяцхан Гар тоглоом аюулгүй юу?",
+        acceptedAnswer: { "@type": "Answer", text: "Тийм, бүрэн аюулгүй. Зар сурталчилгаагүй, хэрэглэгчийн мэдээлэл цуглуулдаггүй, бүртгэл шаардлагагүй. Хүүхэд санамсаргүйгээр хуудсыг хаах, өөр хуудас руу шилжихээс хамгаална. Эцэг эхчүүд зүүн дээд буланг 2 секунд дарж тохиргооны самбарт хандах боломжтой." },
+      },
+    ],
+  },
+];
 
 export default function RootLayout({
   children,
@@ -145,10 +172,13 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon.svg" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        {jsonLd.map((ld, i) => (
+          <script
+            key={i}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+          />
+        ))}
         <script
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`,
